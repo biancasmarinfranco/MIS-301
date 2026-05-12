@@ -1,0 +1,32 @@
+/* ── Add this to your style.css file ── */
+
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  background-color: #E8DCC4;
+  border: 2px solid #D3A29D;
+  border-radius: 10px;
+  padding: 12px 20px;
+  margin-bottom: 24px;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #a36361;
+  font-weight: bold;
+  font-size: 16px;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-link:hover {
+  background-color: #a36361;
+  color: #FDF5E7;
+}
+
+.nav-link.active {
+  background-color: #a36361;
+  color: #FDF5E7;
+}

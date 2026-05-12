@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game Room – Bianca's Webpage</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Game Room specific styles ── */
+    .game-container {
+      text-align: center;
+      padding: 10px 0 40px;
+    }
+
+    .game-subtitle {
+      color: #a36361;
+      font-size: 16px;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    /* Turn indicator */
+    .turn-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background-color: #E8DCC4;
+      border: 2px solid #D3A29D;
+      border-radius: 30px;
+      padding: 10px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #a36361;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .turn-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.15);
+      transition: background-color 0.3s ease;
+    }
+
+    /* Board */
+    .board-wrapper {
+      display: inline-block;
+      background: #a36361;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 8px 32px rgba(163, 99, 97, 0.35);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, 64px);
+      grid-template-rows: repeat(6, 64px);
+      gap: 8px;
+    }
+
+    .cell {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background-color: #FDF5E7;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell:hover {
+      transform: scale(1.06);
+      background-color: #f5e8cc;
+    }
+
+    .cell.player1 {
+      background-color: #D64C4C;   /* red for player 1 */
+      cursor: default;
+    }
+
+    .cell.player2 {
+      background-color: #F5C842;   /* yellow for player 2 */
+      cursor: default;
+    }
+
+    .cell.player1:hover,
+    .cell.player2:hover {
+      transform: none;
+    }
+
+    /* Winning cells pulse */
+    .cell.winner {
+      animation: pulse 0.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1);    box-shadow: 0 0 0px rgba(255,255,255,0); }
+      to   { transform: scale(1.1);  box-shadow: 0 0 14px rgba(255,255,255,0.8); }
+    }
+
+    /* Drop animation */
+    @keyframes drop {
+      from { transform: translateY(-400px); }
+      to   { transform: translateY(0); }
+    }
+
+    .cell.drop {
+      animation: drop 0.35s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
+
+    /* Status message */
+    .status-message {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #a36361;
+      min-height: 32px;
+    }
+
+    /* Buttons */
+    .game-buttons {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background-color: #a36361;
+      color: #FDF5E7;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background-color: #8a4f4d;
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* Score board */
+    .scoreboard {
+      display: inline-flex;
+      gap: 30px;
+      background: #E8DCC4;
+      border: 2px solid #D3A29D;
+      border-radius: 12px;
+      padding: 14px 32px;
+      margin-bottom: 20px;
+    }
+
+    .score-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .score-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.12);
+    }
+
+    .score-dot.p1 { background-color: #D64C4C; }
+    .score-dot.p2 { background-color: #F5C842; }
+
+    .score-label {
+      font-size: 13px;
+      color: #a36361;
+      font-weight: bold;
+    }
+
+    .score-num {
+      font-size: 26px;
+      font-weight: bold;
+      color: #a36361;
+    }
+
+    /* Column hover highlights */
+    .col-highlight {
+      background-color: rgba(255,255,255,0.15);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="game.html" class="nav-link active">🎮 Game Room</a>
+  </nav>
+
+  <h1 class="page-title">Game Room 🎮</h1>
+
+  <div class="game-container">
+    <p class="game-subtitle">Play Connect 4 with a friend — take turns dropping your pieces!</p>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="score-item">
+        <div class="score-dot p1"></div>
+        <span class="score-label">Player 1</span>
+        <span class="score-num" id="score1">0</span>
+      </div>
+      <div class="score-item">
+        <div class="score-dot p2"></div>
+        <span class="score-label">Player 2</span>
+        <span class="score-num" id="score2">0</span>
+      </div>
+    </div>
+
+    <!-- Turn indicator -->
+    <br>
+    <div class="turn-indicator" id="turnIndicator">
+      <div class="turn-dot" id="turnDot"></div>
+      <span id="turnText">Player 1's Turn</span>
+    </div>
+
+    <!-- Board -->
+    <div class="board-wrapper">
+      <div class="board" id="board"></div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-message" id="statusMessage"></div>
+
+    <!-- Buttons -->
+    <div class="game-buttons">
+      <button class="btn" onclick="resetGame()">🔄 New Game</button>
+      <button class="btn" onclick="resetScores()">🗑️ Reset Scores</button>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    Copyright &copy; 2026 Bianca S. Marin Franco. All Rights Reserved.
+  </footer>
+
+  <script>
+    const ROWS = 6;
+    const COLS = 7;
+
+    let board = [];
+    let currentPlayer = 1;
+    let gameOver = false;
+    let scores = { 1: 0, 2: 0 };
+
+    const colors = { 1: '#D64C4C', 2: '#F5C842' };
+
+    function initBoard() {
+      board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+    }
+
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.col = c;
+          cell.dataset.row = r;
+
+          if (board[r][c] === 1) cell.classList.add('player1');
+          if (board[r][c] === 2) cell.classList.add('player2');
+
+          if (!gameOver && board[r][c] === 0) {
+            cell.addEventListener('click', () => handleClick(c));
+          }
+
+          boardEl.appendChild(cell);
+        }
+      }
+      updateTurnUI();
+    }
+
+    function handleClick(col) {
+      if (gameOver) return;
+
+      // Find lowest empty row in that column
+      let targetRow = -1;
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r][col] === 0) { targetRow = r; break; }
+      }
+      if (targetRow === -1) return; // column full
+
+      board[targetRow][col] = currentPlayer;
+      renderBoard();
+
+      // Animate the dropped piece
+      const cellEl = document.querySelector(`[data-row='${targetRow}'][data-col='${col}']`);
+      if (cellEl) cellEl.classList.add('drop');
+
+      // Check win
+      const winCells = checkWin(targetRow, col);
+      if (winCells) {
+        gameOver = true;
+        scores[currentPlayer]++;
+        document.getElementById(`score${currentPlayer}`).textContent = scores[currentPlayer];
+        document.getElementById('statusMessage').textContent =
+          `🎉 Player ${currentPlayer} wins!`;
+        document.getElementById('turnIndicator').style.display = 'none';
+
+        // Highlight winners
+        winCells.forEach(([wr, wc]) => {
+          const wCell = document.querySelector(`[data-row='${wr}'][data-col='${wc}']`);
+          if (wCell) wCell.classList.add('winner');
+        });
+        return;
+      }
+
+      // Check draw
+      if (board[0].every(v => v !== 0)) {
+        gameOver = true;
+        document.getElementById('statusMessage').textContent = "🤝 It's a draw!";
+        document.getElementById('turnIndicator').style.display = 'none';
+        return;
+      }
+
+      // Switch player
+      currentPlayer = currentPlayer === 1 ? 2 : 1;
+      updateTurnUI();
+    }
+
+    function updateTurnUI() {
+      const dot = document.getElementById('turnDot');
+      const text = document.getElementById('turnText');
+      const indicator = document.getElementById('turnIndicator');
+      indicator.style.display = 'inline-flex';
+      dot.style.backgroundColor = colors[currentPlayer];
+      text.textContent = `Player ${currentPlayer}'s Turn`;
+    }
+
+    function checkWin(row, col) {
+      const directions = [
+        [[0,1],[0,-1]],   // horizontal
+        [[1,0],[-1,0]],   // vertical
+        [[1,1],[-1,-1]],  // diagonal ↘
+        [[1,-1],[-1,1]]   // diagonal ↙
+      ];
+
+      for (const [dir1, dir2] of directions) {
+        const cells = [[row, col]];
+
+        for (const [dr, dc] of [dir1, dir2]) {
+          let r = row + dr, c = col + dc;
+          while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === currentPlayer) {
+            cells.push([r, c]);
+            r += dr; c += dc;
+          }
+        }
+
+        if (cells.length >= 4) return cells;
+      }
+      return null;
+    }
+
+    function resetGame() {
+      currentPlayer = 1;
+      gameOver = false;
+      document.getElementById('statusMessage').textContent = '';
+      initBoard();
+      renderBoard();
+    }
+
+    function resetScores() {
+      scores = { 1: 0, 2: 0 };
+      document.getElementById('score1').textContent = '0';
+      document.getElementById('score2').textContent = '0';
+      resetGame();
+    }
+
+    // Start
+    initBoard();
+    renderBoard();
+  </script>
+
+</body>
+</html>
